@@ -1,0 +1,6 @@
+.DS_Store
+*.log
+node_modules/
+
+# MAI committare i dati in chiaro: solo il .enc cifrato va nel repo
+data/registro.csv

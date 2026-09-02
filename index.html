@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="it"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro Incassi — Piattaforma Libri Usati</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,900&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--ink:#14231C;--board:#1E4634;--paper:#F7F5EE;--paper-line:#E4E0D2;--amber:#E8A83C;--red:#B8402F;--muted:#6E7A72;--ok:#2E7D53;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--paper);color:var(--ink);padding-bottom:80px;
+background-image:repeating-linear-gradient(transparent,transparent 31px,rgba(30,70,52,.05) 31px,rgba(30,70,52,.05) 32px);}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+header{background:var(--board);color:var(--paper);padding:56px 0 48px;border-bottom:6px solid var(--amber)}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:14px}
+h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(30px,5vw,52px);line-height:1.05;max-width:720px}
+h1 em{font-style:italic;color:var(--amber)}
+.controls{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;align-items:center}
+.controls label{font-size:13px;color:rgba(247,245,238,.85);display:inline-flex;align-items:center;gap:8px}
+.controls input{width:90px;background:rgba(247,245,238,.1);border:1px solid rgba(247,245,238,.35);color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:14px;padding:5px 8px;border-radius:4px;text-align:right}
+.btn{background:var(--amber);color:#3a2a06;border:none;font-weight:700;font-family:'Inter',sans-serif;font-size:13px;padding:9px 16px;border-radius:6px;cursor:pointer}
+.btn:hover{background:#f2b850}
+.btn.ghost{background:rgba(247,245,238,.12);color:var(--paper);border:1px solid rgba(247,245,238,.35)}
+.btn.ghost:hover{background:rgba(247,245,238,.22)}
+#saveMsg{font-size:13px;color:rgba(247,245,238,.9)}
+.hero-stats{display:flex;flex-wrap:wrap;gap:0;margin-top:30px;border:1px solid rgba(247,245,238,.25)}
+.hstat{flex:1 1 200px;padding:18px 22px;border-right:1px solid rgba(247,245,238,.25)}
+.hstat:last-child{border-right:none}
+.hstat .n{font-family:'Fraunces',serif;font-size:32px;font-weight:700}
+.hstat .l{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:rgba(247,245,238,.7);margin-top:4px}
+.hstat.gold .n{color:var(--amber)}
+section{margin-top:56px}
+.sec-title{font-family:'Fraunces',serif;font-size:26px;font-weight:700;display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.sec-title::before{content:"";width:34px;height:4px;background:var(--amber);align-self:center;flex:none}
+.sec-sub{color:var(--muted);font-size:14px;margin-bottom:22px;max-width:660px}
+.card{background:#fff;border:1px solid var(--paper-line);border-radius:10px;box-shadow:0 2px 10px rgba(20,35,28,.05);overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead th{background:var(--board);color:var(--paper);text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:.09em;font-weight:600;padding:12px 14px;white-space:nowrap}
+thead th:first-child{text-align:left}
+tbody td{padding:8px 10px;border-bottom:1px solid var(--paper-line);text-align:right}
+tbody td:first-child{text-align:left;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;padding-left:14px}
+tbody input{width:82px;border:1px solid var(--paper-line);border-radius:6px;padding:6px 8px;font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;background:var(--paper)}
+tbody input:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:var(--amber);background:#fff}
+td.calc{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ok);font-weight:700}
+tr.exempt td:first-child::after{content:"esente";display:inline-block;margin-left:8px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);border:1px solid var(--red);border-radius:20px;padding:2px 8px}
+tr.exempt td.calc{color:#9AA39D;text-decoration:line-through}
+tfoot td{padding:14px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;text-align:right;background:#FDF6E7;border-top:2px solid var(--amber);font-size:14px}
+tfoot td:first-child{text-align:left;font-family:'Inter',sans-serif;padding-left:14px}
+.table-scroll{overflow-x:auto}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:820px){.charts{grid-template-columns:1fr}}
+.chart-card{background:#fff;border:1px solid var(--paper-line);border-radius:10px;padding:22px;box-shadow:0 2px 10px rgba(20,35,28,.05)}
+.chart-card h3{font-family:'Fraunces',serif;font-size:18px;margin-bottom:2px}
+.chart-card p{font-size:12px;color:var(--muted);margin-bottom:14px}
+.chart-box{position:relative;height:280px}
+.chart-card.full{grid-column:1 / -1}.chart-card.full .chart-box{height:320px}
+.training-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.tcard{background:#fff;border:1px solid var(--paper-line);border-radius:10px;padding:18px;box-shadow:0 2px 10px rgba(20,35,28,.05);transition:opacity .2s}
+.tcard.off{opacity:.5;border-style:dashed}
+.tcard .thead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.tcard .school{font-family:'Fraunces',serif;font-weight:700;font-size:17px}
+.switch{display:inline-flex;align-items:center;gap:6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);cursor:pointer}
+.switch input{width:16px;height:16px;accent-color:var(--ok)}
+.trow{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.trow label{font-size:12px;color:var(--muted)}
+.trow input{width:90px;border:1px solid var(--paper-line);border-radius:6px;padding:6px 8px;font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;background:var(--paper)}
+.tval{display:flex;justify-content:space-between;align-items:baseline;border-top:1px dashed var(--paper-line);padding-top:10px;margin-top:4px}
+.tval .l{font-size:12px;color:var(--muted)}
+.tval .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px;color:var(--ok)}
+.tcard.off .tval .v{color:#9AA39D;text-decoration:line-through}
+.exp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.exp-card{background:#fff;border:1px solid var(--paper-line);border-left:5px solid var(--red);border-radius:10px;padding:18px;box-shadow:0 2px 10px rgba(20,35,28,.05)}
+.exp-card .school{font-family:'Fraunces',serif;font-weight:700;font-size:17px;margin-bottom:12px}
+.exp-card input{width:110px;border:1px solid var(--paper-line);border-radius:6px;padding:6px 8px;font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;background:var(--paper)}
+.row-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn.sm{font-size:12px;padding:7px 12px}
+.btn.line{background:#fff;border:1px solid var(--board);color:var(--board)}
+.btn.del{background:#fff;border:1px solid var(--red);color:var(--red)}
+.summary{background:var(--board);color:var(--paper);border-radius:12px;padding:30px}
+.sline{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px dashed rgba(247,245,238,.2);font-size:15px}
+.sline .v{font-family:'JetBrains Mono',monospace;font-weight:600}
+.sline.neg .v{color:#F0A899}.sline.pos .v{color:#A8DDC0}
+.sline.total{border-bottom:none;border-top:2px solid var(--amber);margin-top:8px;padding-top:16px}
+.sline.total .l{font-family:'Fraunces',serif;font-size:20px;font-weight:700}
+.sline.total .v{font-family:'Fraunces',serif;font-size:32px;font-weight:900;color:var(--amber)}
+.note{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6}
+header .note{color:rgba(247,245,238,.55);margin-top:10px}
+/* --- pannello GitHub --- */
+.gh-panel{background:#fff;border:1px solid var(--paper-line);border-radius:10px;padding:22px;box-shadow:0 2px 10px rgba(20,35,28,.05)}
+.gh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:16px}
+.gh-field{display:flex;flex-direction:column;gap:5px}
+.gh-field label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.gh-field input{border:1px solid var(--paper-line);border-radius:6px;padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--paper)}
+.gh-field input:focus{outline:2px solid var(--amber);border-color:var(--amber);background:#fff}
+.gh-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+#ghMsg{font-size:13px;font-family:'JetBrains Mono',monospace}
+#ghMsg.ok{color:var(--ok)}#ghMsg.err{color:var(--red)}#ghMsg.busy{color:var(--muted)}
+.gh-help{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.7}
+.gh-help code{background:var(--paper);border:1px solid var(--paper-line);border-radius:4px;padding:1px 5px;font-family:'JetBrains Mono',monospace}
+.badge{display:inline-block;font-size:11px;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:20px;margin-left:8px}
+.badge.live{background:#DCF0E4;color:var(--ok)}
+.badge.local{background:#FBE6E1;color:var(--red)}
+details.gh summary{cursor:pointer;font-size:13px;color:var(--board);font-weight:600;margin-bottom:14px}
+/* --- gate password --- */
+#gate{position:fixed;inset:0;z-index:9999;background:var(--board);display:flex;align-items:center;justify-content:center;padding:24px}
+#gate.hidden{display:none}
+.gate-card{background:var(--paper);border-radius:14px;padding:38px 34px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);border-top:6px solid var(--amber)}
+.gate-card .eyebrow{color:#B07E14}
+.gate-card h2{font-family:'Fraunces',serif;font-size:26px;margin:8px 0 6px}
+.gate-card p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px}
+.gate-card input{width:100%;border:1px solid var(--paper-line);border-radius:8px;padding:12px 14px;font-size:15px;font-family:'JetBrains Mono',monospace;background:#fff;margin-bottom:12px}
+.gate-card input:focus{outline:2px solid var(--amber);border-color:var(--amber)}
+.gate-card .btn{width:100%;justify-content:center;padding:12px;font-size:14px;text-align:center}
+.gate-msg{font-size:13px;font-family:'JetBrains Mono',monospace;margin-top:12px;min-height:18px}
+.gate-msg.err{color:var(--red)}.gate-msg.busy{color:var(--muted)}
+.gate-hint{font-size:11px;color:var(--muted);margin-top:16px;line-height:1.6}
+</style></head><body>
+<div id="gate" class="hidden"><div class="gate-card">
+  <div class="eyebrow">Registro incassi · accesso</div>
+  <h2 id="gateTitle">Inserisci la password</h2>
+  <p id="gateDesc">I dati sono cifrati. Digita la password per aprirli. Non viene salvata da nessuna parte.</p>
+  <form id="gateForm">
+    <input type="password" id="gatePass" placeholder="Password" autocomplete="current-password" autofocus>
+    <input type="password" id="gatePass2" placeholder="Ripeti password" autocomplete="new-password" style="display:none">
+    <button class="btn" type="submit" id="gateBtn">🔓 Sblocca</button>
+  </form>
+  <div class="gate-msg" id="gateMsg"></div>
+  <div class="gate-hint" id="gateHint"></div>
+</div></div>
+<header><div class="wrap">
+  <div class="eyebrow">Registro incassi · Anno scolastico <span id="ebAnno">—</span></div>
+  <h1>Ogni libro usato che cambia banco, <em>vale per il sistema</em>.</h1>
+  <div class="controls">
+    <label>Tariffa per copia: € <input type="number" id="rate" value="0.4" step="0.01" min="0"> /libro</label>
+    <label>Formazione: € <input type="number" id="oraria" value="15" step="0.5" min="0"> /h</label>
+    <label>Crescita: <input type="number" id="crescita" value="15" step="1" min="0"> %/mese</label>
+    <button class="btn" id="btnSaveGh">💾 Salva su GitHub</button>
+    <button class="btn ghost" id="btnDownload">⬇ Scarica CSV</button>
+    <span id="saveMsg"></span>
+  </div>
+  <div class="hero-stats">
+    <div class="hstat"><div class="n" id="hLibri">—</div><div class="l">Libri gestiti</div></div>
+    <div class="hstat"><div class="n" id="hVenduti">—</div><div class="l">Libri venduti</div></div>
+    <div class="hstat"><div class="n" id="hRicavo">—</div><div class="l">Ricavo scuole</div></div>
+    <div class="hstat gold"><div class="n" id="hIncasso">—</div><div class="l">Incasso sistema (attivo)</div></div>
+  </div>
+  <p class="note">Database <strong>cifrato</strong> in data/registro.csv.enc <span id="srcBadge" class="badge local">locale</span>. Modifica i campi: tutto si ricalcola. «Salva su GitHub» ri-cifra e committa; «Scarica CSV» = backup in chiaro (solo sul tuo disco).</p>
+</div></header>
+<div class="wrap">
+
+  <section>
+    <div class="sec-title">Sorgente dati · GitHub</div>
+    <p class="sec-sub">Il CSV vive nel tuo repo GitHub. Incolla un token una volta (resta solo nel tuo browser) e salvi con un bottone — nessun altro sistema.</p>
+    <div class="gh-panel">
+      <details class="gh"><summary>⚙ Configurazione repository e token</summary>
+        <div class="gh-grid">
+          <div class="gh-field"><label>Owner (utente/org)</label><input id="ghOwner" placeholder="sebastianburs"></div>
+          <div class="gh-field"><label>Repository</label><input id="ghRepo" placeholder="registro-incassi"></div>
+          <div class="gh-field"><label>Branch</label><input id="ghBranch" placeholder="main"></div>
+          <div class="gh-field"><label>Percorso file</label><input id="ghPath" placeholder="data/registro.csv.enc"></div>
+          <div class="gh-field" style="grid-column:1/-1"><label>Personal Access Token (scope: repo/contents)</label><input id="ghToken" type="password" placeholder="ghp_… oppure github_pat_…"></div>
+        </div>
+      </details>
+      <div class="gh-actions">
+        <button class="btn line" id="btnLoadGh">⟳ Carica da GitHub</button>
+        <button class="btn" id="btnSaveGh2">💾 Salva su GitHub</button>
+        <span id="ghMsg"></span>
+      </div>
+      <p class="gh-help">
+        <strong>Token:</strong> GitHub → Settings → Developer settings → <em>Fine-grained tokens</em> → repo <code>registro-incassi</code>, permesso <code>Contents: Read and write</code>.
+        Salvato solo in <code>localStorage</code> del browser, inviato solo a <code>api.github.com</code>.
+        <br><strong>Password dati:</strong> cifra/decifra il CSV in locale (AES-256), non è mai salvata né committata. Il file nel repo (<code>data/registro.csv.enc</code>) è illeggibile senza di essa.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Registro per scuola</div>
+    <p class="sec-sub">Campi bianchi modificabili. <strong>Incasso sistema = libri venduti × tariffa</strong>, calcolato in automatico. La spunta «esente» esclude la scuola dall'incasso.</p>
+    <div class="card table-scroll"><table id="mainTable">
+      <thead><tr><th>Scuola</th><th>Libri gestiti</th><th>Libri venduti</th><th>Ricavo</th><th>Netto scuola</th><th>Esente</th><th>Incasso sistema</th></tr></thead>
+      <tbody id="tbody"></tbody>
+      <tfoot><tr><td>Totale attivo (escluse esenti)</td><td id="fGestiti"></td><td id="fVenduti"></td><td id="fRicavo"></td><td id="fNetto"></td><td></td><td id="fIncasso"></td></tr></tfoot>
+    </table></div>
+    <div class="row-actions"><button class="btn sm line" id="btnAddSchool">+ Aggiungi scuola</button></div>
+  </section>
+
+  <section>
+    <div class="sec-title">Grafici</div>
+    <p class="sec-sub">Vendite per scuola, ripartizione incasso e proiezione a crescita mensile.</p>
+    <div class="charts">
+      <div class="chart-card"><h3>Libri: gestiti vs venduti</h3><p>Tutte le scuole</p><div class="chart-box"><canvas id="chartBooks"></canvas></div></div>
+      <div class="chart-card"><h3>Incasso sistema per scuola</h3><p>Quota sull'incasso attivo</p><div class="chart-box"><canvas id="chartShare"></canvas></div></div>
+      <div class="chart-card full"><h3>Proiezione 12 mesi</h3><p>Incasso mensile e cumulato dall'attuale incasso attivo</p><div class="chart-box"><canvas id="chartGrowth"></canvas></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Formazione</div>
+    <p class="sec-sub">Modifica le <strong>ore</strong>: il ricavo formazione si ricalcola. La spunta «Conta nel totale» include o esclude la scuola.</p>
+    <div class="training-grid" id="trainingGrid"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">Spese</div>
+    <p class="sec-sub">Costi fissi della piattaforma, sottratti dal totale.</p>
+    <div class="exp-grid" id="expGrid"></div>
+    <div class="row-actions"><button class="btn sm line" id="btnAddExpense">+ Aggiungi spesa</button></div>
+  </section>
+
+  <section>
+    <div class="sec-title">Riepilogo economico</div>
+    <div class="summary">
+      <div class="sline pos"><span class="l">Incasso vendite libri (scuole attive)</span><span class="v" id="sVendite"></span></div>
+      <div class="sline pos"><span class="l">Ricavo formazione (scuole incluse)</span><span class="v" id="sForm"></span></div>
+      <div id="sSpese"></div>
+      <div class="sline total"><span class="l">Netto sistema</span><span class="v" id="sTotale"></span></div>
+    </div>
+    <p class="note">Documento generato da data/registro.csv. La proiezione è un'ipotesi di crescita costante, non una previsione garantita.</p>
+  </section>
+</div>
+
+<script>
+/* ============================================================
+   Registro Incassi — dashboard con DB = data/registro.csv
+   Persistenza: commit su GitHub via Contents API (token utente),
+   più export/download come backup. Nessun sistema esterno.
+   ============================================================ */
+
+/* ---------- stato ---------- */
+let schools = [];
+let spese   = [];
+let cfg = { tariffa_per_copia:0.4, tariffa_oraria_formazione:15, anno_scolastico:'—', crescita_mensile_pct:15 };
+
+const palette = ['#E8A83C','#2E7D53','#1E4634','#C98A1E','#6E7A72','#B8402F','#8C6D1F','#417A5A'];
+const boardC='#1E4634', amberC='#E8A83C', paperC='#F7F5EE';
+const fmtEUR = n => (isFinite(n)?n:0).toLocaleString('it-IT',{style:'currency',currency:'EUR'});
+const fmtNum = n => (isFinite(n)?n:0).toLocaleString('it-IT');
+const rate     = () => parseFloat(document.getElementById('rate').value) || 0;
+const oraria   = () => parseFloat(document.getElementById('oraria').value) || 0;
+const crescita = () => (parseFloat(document.getElementById('crescita').value) || 0) / 100;
+
+/* ---------- template vuoto (NIENTE dati reali: questo HTML è pubblico) ----------
+   I dati veri stanno cifrati in data/registro.csv.enc e si aprono con la password. */
+const SEED_CSV = `tipo,nome,gestiti,venduti,ricavo,netto,esente,ore,conta,valore
+config,tariffa_per_copia,,,,,,,,0.40
+config,tariffa_oraria_formazione,,,,,,,,15
+config,anno_scolastico,,,,,,,,2025/26
+config,crescita_mensile_pct,,,,,,,,15
+`;
+
+/* ============================================================
+   Cifratura client-side: AES-256-GCM, chiave da PBKDF2-SHA256.
+   La password NON viene mai salvata: sta solo in memoria (SESSION_PASS)
+   finché la scheda è aperta. Il blob .enc è pubblico ma inutile senza pw.
+   Formato compatibile con tools/registro.py e tools/cifra.py.
+   ============================================================ */
+const PBKDF2_ITER = 310000;
+let SESSION_PASS = null;   // solo in RAM, mai su disco/localStorage
+const _te = new TextEncoder(), _td = new TextDecoder();
+const b64 = u8 => btoa(String.fromCharCode(...new Uint8Array(u8)));
+const u8b64 = s => Uint8Array.from(atob(s), c=>c.charCodeAt(0));
+async function deriveKey(pass, salt, iter){
+  const km = await crypto.subtle.importKey('raw', _te.encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:iter, hash:'SHA-256'},
+    km, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+async function encryptCsv(text, pass){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv   = crypto.getRandomValues(new Uint8Array(12));
+  const key  = await deriveKey(pass, salt, PBKDF2_ITER);
+  const ct   = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, _te.encode(text));
+  return JSON.stringify({v:1, kdf:'PBKDF2', hash:'SHA-256', iter:PBKDF2_ITER,
+    cipher:'AES-256-GCM', salt:b64(salt), iv:b64(iv), ct:b64(ct)}, null, 0)+'\n';
+}
+async function decryptCsv(blob, pass){
+  const o = JSON.parse(blob);
+  const key = await deriveKey(pass, u8b64(o.salt), o.iter||PBKDF2_ITER);
+  const pt  = await crypto.subtle.decrypt({name:'AES-GCM', iv:u8b64(o.iv)}, key, u8b64(o.ct));
+  return _td.decode(pt);
+}
+const looksEncrypted = t => { try{ const o=JSON.parse(t); return o && o.ct && o.iv && o.salt; }catch(e){ return false; } };
+
+/* ---------- CSV parse/serialize ---------- */
+function parseCsv(text){
+  const rows = [];
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim().length);
+  const header = splitCsvLine(lines[0]);
+  for(let i=1;i<lines.length;i++){
+    const cells = splitCsvLine(lines[i]);
+    const o = {}; header.forEach((h,j)=> o[h.trim()] = (cells[j]!==undefined?cells[j]:'').trim());
+    rows.push(o);
+  }
+  return rows;
+}
+function splitCsvLine(line){
+  const out=[]; let cur='', q=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(q){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else { if(c==='"') q=true; else if(c===',') {out.push(cur);cur='';} else cur+=c; }
+  }
+  out.push(cur); return out;
+}
+function csvCell(v){
+  const s = (v===undefined||v===null)?'':String(v);
+  return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+}
+const truthy = v => /^(si|sì|yes|true|1|x)$/i.test(String(v).trim());
+const numOr0 = v => { const n = parseFloat(String(v).replace(',','.')); return isFinite(n)?n:0; };
+
+function loadFromCsvText(text){
+  const rows = parseCsv(text);
+  const S=[], E=[]; const C={...cfg};
+  rows.forEach(r=>{
+    const t=(r.tipo||'').toLowerCase();
+    if(t==='config'){
+      const k=r.nome, v=r.valore;
+      if(k==='anno_scolastico') C.anno_scolastico = v || '—';
+      else if(k in C) C[k] = numOr0(v);
+    } else if(t==='scuola'){
+      S.push({name:r.nome, gestiti:numOr0(r.gestiti), venduti:numOr0(r.venduti), ricavo:numOr0(r.ricavo),
+              netto:numOr0(r.netto), exempt:truthy(r.esente), ore:numOr0(r.ore), conta:truthy(r.conta)});
+    } else if(t==='spesa'){
+      E.push({voce:r.nome, costo:numOr0(r.valore)});
+    }
+  });
+  schools=S; spese=E; cfg=C;
+}
+
+function buildCsv(){
+  const g = n => (Math.round(n*1000)/1000).toString();
+  let out = 'tipo,nome,gestiti,venduti,ricavo,netto,esente,ore,conta,valore\n';
+  out += `config,tariffa_per_copia,,,,,,,,${rate()}\n`;
+  out += `config,tariffa_oraria_formazione,,,,,,,,${oraria()}\n`;
+  out += `config,anno_scolastico,,,,,,,,${csvCell(cfg.anno_scolastico)}\n`;
+  out += `config,crescita_mensile_pct,,,,,,,,${parseFloat(document.getElementById('crescita').value)||0}\n`;
+  schools.forEach(s=>{
+    out += `scuola,${csvCell(s.name)},${g(s.gestiti)},${g(s.venduti)},${g(s.ricavo)},${g(s.netto)},${s.exempt?'si':'no'},${g(s.ore)},${s.conta?'si':'no'},\n`;
+  });
+  spese.forEach(x=>{ out += `spesa,${csvCell(x.voce)},,,,,,,,${g(x.costo)}\n`; });
+  return out;
+}
+
+/* ---------- render ---------- */
+function applyConfigToInputs(){
+  document.getElementById('rate').value = cfg.tariffa_per_copia;
+  document.getElementById('oraria').value = cfg.tariffa_oraria_formazione;
+  document.getElementById('crescita').value = cfg.crescita_mensile_pct;
+  document.getElementById('ebAnno').textContent = cfg.anno_scolastico;
+}
+function buildTable(){
+  const tb = document.getElementById('tbody'); tb.innerHTML='';
+  schools.forEach((s,i)=>{
+    const tr = document.createElement('tr');
+    if(s.exempt) tr.className='exempt';
+    tr.innerHTML = `<td><input type="text" data-name="${i}" value="${s.name.replace(/"/g,'&quot;')}" style="width:130px;text-align:left"></td>
+      <td><input type="number" min="0" step="1" data-f="gestiti" data-i="${i}" value="${s.gestiti}"></td>
+      <td><input type="number" min="0" step="1" data-f="venduti" data-i="${i}" value="${s.venduti}"></td>
+      <td><input type="number" min="0" step="1" data-f="ricavo"  data-i="${i}" value="${s.ricavo}"></td>
+      <td><input type="number" min="0" step="1" data-f="netto"   data-i="${i}" value="${s.netto}"></td>
+      <td><input type="checkbox" data-ex="${i}" ${s.exempt?'checked':''}></td>
+      <td class="calc" id="inc${i}">—</td>`;
+    tb.appendChild(tr);
+  });
+}
+function buildTraining(){
+  const g = document.getElementById('trainingGrid'); g.innerHTML='';
+  schools.forEach((s,i)=>{
+    const c = document.createElement('div');
+    c.className='tcard'; c.id='tcard'+i;
+    c.innerHTML = `<div class="thead"><span class="school">${s.name}</span>
+      <label class="switch"><input type="checkbox" data-chk="${i}" ${s.conta?'checked':''}> Conta nel totale</label></div>
+      <div class="trow"><label>Ore fatte</label><input type="number" min="0" step="0.5" data-ore="${i}" value="${s.ore}"></div>
+      <div class="trow"><label>Costo orario</label><b id="oref${i}"></b></div>
+      <div class="tval"><span class="l">Ricavo formazione</span><span class="v" id="fval${i}">—</span></div>`;
+    g.appendChild(c);
+  });
+}
+function buildExpenses(){
+  const g = document.getElementById('expGrid'); g.innerHTML='';
+  spese.forEach((x,i)=>{
+    const c = document.createElement('div');
+    c.className='exp-card';
+    c.innerHTML = `<div class="school"><input type="text" data-expname="${i}" value="${x.voce.replace(/"/g,'&quot;')}" style="width:150px"></div>
+      <div class="trow"><label>Costo (€)</label><input type="number" min="0" step="1" data-exp="${i}" value="${x.costo}"></div>
+      <div class="row-actions"><button class="btn sm del" data-delexp="${i}">Rimuovi</button></div>`;
+    g.appendChild(c);
+  });
+}
+function buildAll(){ applyConfigToInputs(); buildTable(); buildTraining(); buildExpenses(); }
+
+/* ---------- calcolo ---------- */
+let chartBooks, chartShare, chartGrowth;
+function readInputs(){
+  schools.forEach((s,i)=>{
+    const q=sel=>document.querySelector(sel);
+    s.name    = (q(`[data-name="${i}"]`)?.value ?? s.name);
+    s.gestiti = +q(`[data-f="gestiti"][data-i="${i}"]`).value || 0;
+    s.venduti = +q(`[data-f="venduti"][data-i="${i}"]`).value || 0;
+    s.ricavo  = +q(`[data-f="ricavo"][data-i="${i}"]`).value  || 0;
+    s.netto   = +q(`[data-f="netto"][data-i="${i}"]`).value   || 0;
+    s.exempt  = q(`[data-ex="${i}"]`).checked;
+    s.ore     = +q(`[data-ore="${i}"]`).value || 0;
+    s.conta   = q(`[data-chk="${i}"]`).checked;
+  });
+  spese.forEach((x,i)=>{
+    x.voce  = document.querySelector(`[data-expname="${i}"]`)?.value ?? x.voce;
+    x.costo = +document.querySelector(`[data-exp="${i}"]`).value || 0;
+  });
+}
+function recalc(){
+  readInputs();
+  schools.forEach((s,i)=>{
+    document.getElementById('inc'+i).textContent = fmtEUR(s.venduti * rate());
+    document.querySelector(`[data-name="${i}"]`).closest('tr').classList.toggle('exempt', s.exempt);
+  });
+  let tG=0,tV=0,tR=0,tN=0,tI=0, allG=0,allV=0,allR=0;
+  schools.forEach(s=>{
+    allG+=s.gestiti; allV+=s.venduti; allR+=s.ricavo;
+    if(!s.exempt){ tG+=s.gestiti; tV+=s.venduti; tR+=s.ricavo; tN+=s.netto; tI+=s.venduti*rate(); }
+  });
+  fGestiti.textContent=fmtNum(tG); fVenduti.textContent=fmtNum(tV);
+  fRicavo.textContent=fmtEUR(tR); fNetto.textContent=fmtEUR(tN); fIncasso.textContent=fmtEUR(tI);
+  hLibri.textContent=fmtNum(allG); hVenduti.textContent=fmtNum(allV);
+  hRicavo.textContent=fmtEUR(allR); hIncasso.textContent=fmtEUR(tI);
+  let formTot=0;
+  schools.forEach((s,i)=>{
+    const val = s.ore * oraria();
+    document.getElementById('fval'+i).textContent = fmtEUR(val);
+    document.getElementById('oref'+i).textContent = fmtEUR(oraria())+' /h';
+    document.getElementById('tcard'+i).classList.toggle('off', !s.conta);
+    if(s.conta) formTot += val;
+  });
+  let speseTot=0, speseHtml='';
+  spese.forEach(x=>{
+    speseTot += x.costo;
+    speseHtml += `<div class="sline neg"><span class="l">Spesa — ${x.voce}</span><span class="v">− ${fmtEUR(x.costo)}</span></div>`;
+  });
+  const netto = tI + formTot - speseTot;
+  sVendite.textContent='+ '+fmtEUR(tI);
+  sForm.textContent='+ '+fmtEUR(formTot);
+  sSpese.innerHTML=speseHtml;
+  const t=document.getElementById('sTotale');
+  t.textContent=fmtEUR(netto); t.style.color = netto<0 ? '#F0A899':'';
+  updateCharts(tI);
+}
+function growthData(start){
+  const labels=[],monthly=[],cumul=[]; let m=start,c=0; const gr=crescita();
+  for(let i=0;i<12;i++){labels.push('Mese '+(i+1));monthly.push(Math.round(m*100)/100);c+=m;cumul.push(Math.round(c*100)/100);m*=(1+gr);}
+  return {labels,datasets:[
+    {label:'Incasso mensile',data:monthly,borderColor:boardC,backgroundColor:'#1E463422',fill:true,tension:.35},
+    {label:'Cumulato',data:cumul,borderColor:amberC,borderDash:[6,4],tension:.35}]};
+}
+function shareData(){
+  const active = schools.filter(s=>!s.exempt && s.venduti>0);
+  return {labels:active.map(s=>s.name),datasets:[{data:active.map(s=>s.venduti*rate()),backgroundColor:palette,borderColor:paperC,borderWidth:3}]};
+}
+function buildCharts(){
+  Chart.defaults.font.family="'Inter',sans-serif"; Chart.defaults.color='#14231C';
+  chartBooks=new Chart(document.getElementById('chartBooks'),{type:'bar',data:{labels:schools.map(s=>s.exempt?s.name+' (esente)':s.name),
+    datasets:[{label:'Gestiti',data:schools.map(s=>s.gestiti),backgroundColor:'#1E463455',borderColor:boardC,borderWidth:1.5},
+    {label:'Venduti',data:schools.map(s=>s.venduti),backgroundColor:amberC}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,grid:{color:'#E4E0D2'}},x:{grid:{display:false}}}}});
+  chartShare=new Chart(document.getElementById('chartShare'),{type:'doughnut',data:shareData(),
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmtEUR(c.parsed)}`}}}}});
+  chartGrowth=new Chart(document.getElementById('chartGrowth'),{type:'line',data:growthData(0),
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmtEUR(c.parsed.y)}`}}},scales:{y:{beginAtZero:true,grid:{color:'#E4E0D2'},ticks:{callback:v=>fmtEUR(v)}},x:{grid:{display:false}}}}});
+}
+function updateCharts(activeIncome){
+  if(!chartBooks) return;
+  chartBooks.data.labels=schools.map(s=>s.exempt?s.name+' (esente)':s.name);
+  chartBooks.data.datasets[0].data=schools.map(s=>s.gestiti);
+  chartBooks.data.datasets[1].data=schools.map(s=>s.venduti);
+  chartBooks.update();
+  chartShare.data=shareData(); chartShare.update();
+  chartGrowth.data=growthData(activeIncome); chartGrowth.update();
+}
+function rebuildCharts(){ if(chartBooks){chartBooks.destroy();chartShare.destroy();chartGrowth.destroy();} buildCharts(); }
+
+/* ---------- add/remove righe ---------- */
+function addSchool(){
+  readInputs();
+  schools.push({name:'Nuova scuola',gestiti:0,venduti:0,ricavo:0,netto:0,exempt:false,ore:0,conta:true});
+  buildTable(); buildTraining(); rebuildCharts(); recalc();
+}
+function addExpense(){
+  readInputs();
+  spese.push({voce:'Nuova spesa',costo:0});
+  buildExpenses(); recalc();
+}
+function delExpense(i){
+  readInputs(); spese.splice(i,1); buildExpenses(); recalc();
+}
+
+/* ---------- download (backup) ---------- */
+function downloadCsv(){
+  readInputs();
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(buildCsv());
+  a.download='registro.csv'; document.body.appendChild(a); a.click(); a.remove();
+  const m=document.getElementById('saveMsg');
+  m.textContent='✓ scaricato — backup locale';
+  setTimeout(()=>m.textContent='',5000);
+}
+
+/* ============================================================
+   GitHub Contents API — carica e salva il CSV nel repo
+   ============================================================ */
+const GH = {
+  owner(){ return document.getElementById('ghOwner').value.trim(); },
+  repo(){  return document.getElementById('ghRepo').value.trim(); },
+  branch(){return document.getElementById('ghBranch').value.trim() || 'main'; },
+  path(){  return document.getElementById('ghPath').value.trim() || 'data/registro.csv'; },
+  token(){ return document.getElementById('ghToken').value.trim(); },
+  apiUrl(){ return `https://api.github.com/repos/${this.owner()}/${this.repo()}/contents/${this.path()}`; }
+};
+const b64encode = str => btoa(unescape(encodeURIComponent(str)));
+const b64decode = b64 => decodeURIComponent(escape(atob(b64.replace(/\n/g,''))));
+function ghMsg(text, cls){ const m=document.getElementById('ghMsg'); m.textContent=text; m.className=cls||''; }
+
+const CFG_KEYS=['ghOwner','ghRepo','ghBranch','ghPath','ghToken'];
+function saveGhConfig(){ const o={}; CFG_KEYS.forEach(k=>o[k]=document.getElementById(k).value); try{localStorage.setItem('registro_gh',JSON.stringify(o));}catch(e){} }
+function loadGhConfig(){
+  let o={};
+  try{ o=JSON.parse(localStorage.getItem('registro_gh')||'{}'); }catch(e){}
+  document.getElementById('ghOwner').value  = o.ghOwner  || 'sebastianburs';
+  document.getElementById('ghRepo').value   = o.ghRepo   || 'registro-incassi';
+  document.getElementById('ghBranch').value = o.ghBranch || 'main';
+  document.getElementById('ghPath').value   = o.ghPath   || 'data/registro.csv.enc';
+  document.getElementById('ghToken').value  = o.ghToken  || '';
+}
+
+async function ghGetSha(){
+  const r = await fetch(GH.apiUrl()+`?ref=${GH.branch()}`, {
+    headers:{ 'Authorization':'Bearer '+GH.token(), 'Accept':'application/vnd.github+json' }
+  });
+  if(r.status===404) return null;          // file non esiste ancora
+  if(!r.ok) throw new Error('GET '+r.status+' '+(await r.text()).slice(0,120));
+  const j = await r.json();
+  return { sha:j.sha, content:b64decode(j.content) };
+}
+
+async function loadFromGitHub(){
+  if(!GH.owner()||!GH.repo()){ ghMsg('Compila owner e repository.','err'); return; }
+  if(!GH.token()){ ghMsg('Serve un token (Contents: read).','err'); return; }
+  ghMsg('Carico da GitHub…','busy');
+  try{
+    const res = await ghGetSha();
+    if(!res){ ghMsg('File non trovato nel repo. Usa «Salva» per crearlo.','err'); return; }
+    let csv = res.content;
+    if(looksEncrypted(csv)) csv = await unlockWith(csv);   // chiede password se serve
+    loadFromCsvText(csv);
+    buildAll(); rebuildCharts(); recalc();
+    setSourceBadge(true);
+    ghMsg('✓ Caricato da GitHub.','ok');
+  }catch(e){ ghMsg('Errore: '+e.message,'err'); }
+}
+
+async function saveToGitHub(){
+  if(!GH.owner()||!GH.repo()){ ghMsg('Compila owner e repository.','err'); return; }
+  if(!GH.token()){ ghMsg('Serve un token (Contents: read/write).','err'); return; }
+  readInputs(); saveGhConfig();
+  if(!SESSION_PASS){ await askNewPassword(); }   // prima volta: scegli la password
+  ghMsg('Cifro e salvo su GitHub…','busy');
+  try{
+    const encBlob = await encryptCsv(buildCsv(), SESSION_PASS);
+    let sha=null;
+    try{ const cur=await ghGetSha(); sha=cur?cur.sha:null; }catch(e){ /* se manca permesso read, provo comunque a scrivere */ }
+    const body = {
+      message:'Aggiorna registro incassi da dashboard',
+      content:b64encode(encBlob),
+      branch:GH.branch()
+    };
+    if(sha) body.sha=sha;
+    const r = await fetch(GH.apiUrl(), {
+      method:'PUT',
+      headers:{ 'Authorization':'Bearer '+GH.token(), 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
+      body:JSON.stringify(body)
+    });
+    if(!r.ok) throw new Error('PUT '+r.status+' '+(await r.text()).slice(0,160));
+    const j=await r.json();
+    setSourceBadge(true);
+    ghMsg('✓ Salvato su GitHub · commit '+(j.commit?.sha||'').slice(0,7),'ok');
+  }catch(e){ ghMsg('Errore: '+e.message,'err'); }
+}
+
+function setSourceBadge(live){
+  const b=document.getElementById('srcBadge');
+  if(live){ b.textContent='GitHub'; b.className='badge live'; }
+  else{ b.textContent='locale'; b.className='badge local'; }
+}
+
+/* ============================================================
+   Gate password (overlay). La password resta solo in SESSION_PASS.
+   ============================================================ */
+const gate = document.getElementById('gate');
+let _gateSubmit = null;
+function gVal(){ return {p1:document.getElementById('gatePass').value, p2:document.getElementById('gatePass2').value}; }
+function waitSubmit(){ return new Promise(r=>{ _gateSubmit=r; }); }
+function openGate(o){
+  gate.classList.remove('hidden');
+  document.getElementById('gateTitle').textContent=o.title;
+  document.getElementById('gateDesc').textContent=o.desc;
+  document.getElementById('gateHint').textContent=o.hint||'';
+  document.getElementById('gatePass2').style.display=o.confirm?'block':'none';
+  document.getElementById('gateBtn').textContent=o.confirm?'🔐 Imposta e continua':'🔓 Sblocca';
+  document.getElementById('gatePass').value=''; document.getElementById('gatePass2').value='';
+  const m=document.getElementById('gateMsg'); m.textContent=''; m.className='gate-msg';
+  setTimeout(()=>document.getElementById('gatePass').focus(),50);
+}
+function closeGate(){ gate.classList.add('hidden'); document.getElementById('gatePass').value=''; document.getElementById('gatePass2').value=''; }
+function gateErr(t){ const m=document.getElementById('gateMsg'); m.textContent=t; m.className='gate-msg err'; }
+function gateBusy(t){ const m=document.getElementById('gateMsg'); m.textContent=t; m.className='gate-msg busy'; }
+async function unlockWith(blob){
+  openGate({title:'Inserisci la password', desc:'I dati sono cifrati. Digita la password per aprirli. Non viene salvata da nessuna parte.', confirm:false});
+  while(true){
+    await waitSubmit();
+    const {p1}=gVal();
+    if(!p1){ gateErr('Inserisci la password.'); continue; }
+    gateBusy('Decifro…');
+    try{ const csv=await decryptCsv(blob,p1); SESSION_PASS=p1; closeGate(); return csv; }
+    catch(e){ gateErr('Password errata.'); document.getElementById('gatePass').select(); }
+  }
+}
+async function askNewPassword(){
+  openGate({title:'Imposta una password', desc:'Scegli una password robusta: cifrerà i dati. Serve per riaprirli.', confirm:true,
+    hint:'Consiglio: una passphrase di 4-5 parole. Se la perdi, i dati NON si recuperano.'});
+  while(true){
+    await waitSubmit();
+    const {p1,p2}=gVal();
+    if(p1.length<8){ gateErr('Almeno 8 caratteri.'); continue; }
+    if(p1!==p2){ gateErr('Le due password non coincidono.'); continue; }
+    SESSION_PASS=p1; closeGate(); return p1;
+  }
+}
+document.getElementById('gateForm').addEventListener('submit', e=>{ e.preventDefault(); if(_gateSubmit){ const f=_gateSubmit; _gateSubmit=null; f(); } });
+
+/* ============================================================
+   avvio: legge data/registro.csv.enc (cifrato) e chiede la password;
+   se non c'è, prova il CSV in chiaro (uso locale/migrazione),
+   altrimenti parte dal template vuoto (prima configurazione).
+   ============================================================ */
+async function boot(){
+  loadGhConfig();
+  let text = SEED_CSV, live=false;
+  // 1) file cifrato (caso pubblicato)
+  try{
+    const r = await fetch('data/registro.csv.enc', {cache:'no-store'});
+    if(r.ok){ const blob = await r.text(); text = await unlockWith(blob); live=true; }
+  }catch(e){ /* prosegui */ }
+  // 2) fallback CSV in chiaro (uso locale / prima cifratura)
+  if(!live){
+    try{
+      const r = await fetch('data/registro.csv', {cache:'no-store'});
+      if(r.ok){ const t = await r.text(); if(!looksEncrypted(t)){ text=t; live=true; } }
+    }catch(e){ /* file:// o assente → template */ }
+  }
+  loadFromCsvText(text);
+  buildAll(); buildCharts(); recalc();
+  setSourceBadge(live);
+
+  // eventi
+  document.addEventListener('input', e=>{ if(e.target.closest('.gh-panel')||e.target.closest('#gate')) return; recalc(); });
+  document.getElementById('btnDownload').addEventListener('click', downloadCsv);
+  document.getElementById('btnSaveGh').addEventListener('click', saveToGitHub);
+  document.getElementById('btnSaveGh2').addEventListener('click', saveToGitHub);
+  document.getElementById('btnLoadGh').addEventListener('click', loadFromGitHub);
+  document.getElementById('btnAddSchool').addEventListener('click', addSchool);
+  document.getElementById('btnAddExpense').addEventListener('click', addExpense);
+  document.getElementById('expGrid').addEventListener('click', e=>{
+    const d=e.target.closest('[data-delexp]'); if(d) delExpense(+d.dataset.delexp);
+  });
+  CFG_KEYS.forEach(k=>document.getElementById(k).addEventListener('change', saveGhConfig));
+}
+boot();
+</script>
+</body></html>
