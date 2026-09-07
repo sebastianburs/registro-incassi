@@ -44,7 +44,7 @@ def read_rows():
     return list(csv.DictReader(io.StringIO(_read_csv_text())))
 
 def load():
-    cfg, scuole, spese = {}, [], []
+    cfg, scuole, assistenti, spese = {}, [], [], []
     for r in read_rows():
         t = (r.get('tipo') or '').strip()
         if t == 'config':
@@ -56,35 +56,43 @@ def load():
                  'esente': si(r['esente']),
                  'ore': num(r['ore']), 'conta': si(r['conta'])}
             scuole.append(s)
+        elif t == 'assistente':
+            assistenti.append({'nome': r['nome'], 'ore': num(r['ore']), 'conta': si(r['conta'])})
         elif t == 'spesa':
             spese.append({'voce': r['nome'], 'costo': num(r['valore'])})
     tariffa = num(cfg.get('tariffa_per_copia', 0.40))
     oraria  = num(cfg.get('tariffa_oraria_formazione', 15))
     for s in scuole:
         s['incasso'] = round(s['venduti'] * tariffa, 2)
-        s['form_val'] = round(s['ore'] * oraria, 2)
-    return cfg, tariffa, oraria, scuole, spese
+    for p in assistenti:
+        p['val'] = round(p['ore'] * oraria, 2)
+    return cfg, tariffa, oraria, scuole, assistenti, spese
 
-def totali(scuole, spese):
+def totali(scuole, assistenti, spese):
     inc = round(sum(s['incasso'] for s in scuole if not s['esente']), 2)
-    formz = round(sum(s['form_val'] for s in scuole if s['conta']), 2)
+    assist = round(sum(p['val'] for p in assistenti if p['conta']), 2)
     spe = round(sum(x['costo'] for x in spese), 2)
-    return inc, formz, spe, round(inc + formz - spe, 2)
+    return inc, assist, spe, round(inc + assist - spe, 2)
 
 def eur(n): return f"{n:,.2f} €".replace(",", "X").replace(".", ",").replace("X", ".")
 
 def cmd_report(args):
-    cfg, tariffa, oraria, scuole, spese = load()
-    inc, formz, spe, netto = totali(scuole, spese)
+    cfg, tariffa, oraria, scuole, assistenti, spese = load()
+    inc, assist, spe, netto = totali(scuole, assistenti, spese)
     print(f"\n== REGISTRO INCASSI  (anno {cfg.get('anno_scolastico','-')}) ==")
-    print(f"Tariffa: {eur(tariffa)}/copia  |  Formazione: {eur(oraria)}/h\n")
+    print(f"Tariffa: {eur(tariffa)}/copia  |  Assistenza: {eur(oraria)}/h\n")
     print(f"{'Scuola':<12}{'Gest.':>7}{'Vend.':>7}{'Incasso':>12}   note")
     for s in scuole:
         print(f"{s['nome']:<12}{s['gestiti']:>7}{s['venduti']:>7}{eur(s['incasso']):>12}"
               f"   {'ESENTE' if s['esente'] else ''}")
+    if assistenti:
+        print(f"\n{'Assistenza':<16}{'Ore':>7}{'Ricavo':>12}   note")
+        for p in assistenti:
+            print(f"{p['nome']:<16}{p['ore']:>7g}{eur(p['val']):>12}"
+                  f"   {'' if p['conta'] else 'ESCLUSO'}")
     print("\n-- RIEPILOGO --")
     print(f"  Incasso vendite (attive) : + {eur(inc)}")
-    print(f"  Ricavo formazione        : + {eur(formz)}")
+    print(f"  Ricavo assistenza (incl.): + {eur(assist)}")
     for x in spese:
         print(f"  Spesa {x['voce']:<18}: - {eur(x['costo'])}")
     print(f"  {'NETTO SISTEMA':<25}: = {eur(netto)}\n")

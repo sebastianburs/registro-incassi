@@ -20,14 +20,15 @@ registro-incassi/
 
 La colonna `tipo` dice cos'è ogni riga:
 
-- `config` → tariffa per copia, costo orario formazione, anno, crescita %/mese
-- `scuola` → gestiti, venduti, ricavo, netto, esente (si/no), ore, conta (si/no)
+- `config` → tariffa per copia, tariffa oraria assistenza, anno, crescita %/mese
+- `scuola` → gestiti, venduti, ricavo, netto, esente (si/no)
+- `assistente` → una persona che fa assistenza: `nome`, `ore`, `conta` (si/no = incluso nel totale)
 - `spesa`  → nome nella colonna `nome`, importo nella colonna `valore`
 
 ## Come si usa
 
 1. Apri `index.html` (in locale, o via GitHub Pages se attivato).
-2. Modifica libri gestiti/venduti/ricavo/netto/ore, tariffe, spese. Incasso, formazione, totali e grafici si ricalcolano da soli.
+2. Modifica libri gestiti/venduti/ricavo/netto, tariffe, persone assistenza (ore), spese. Incasso, assistenza, totali e grafici si ricalcolano da soli.
 3. Salva:
    - **💾 Salva su GitHub** — fa il commit di `data/registro.csv` direttamente nel repo (serve un token, vedi sotto).
    - **⬇ Scarica CSV** — backup locale, poi lo sovrascrivi/committi a mano.
@@ -36,8 +37,8 @@ La colonna `tipo` dice cos'è ogni riga:
 
 - Incasso sistema per scuola = libri venduti × tariffa per copia
 - Scuole `esente = si` NON entrano nell'incasso del sistema
-- Ricavo formazione = ore × costo orario (solo scuole con `conta = si`)
-- Netto sistema = incasso vendite + formazione − spese
+- Ricavo assistenza = ore × tariffa oraria (solo persone `assistente` con `conta = si`)
+- Netto sistema = incasso vendite + assistenza − spese
 
 ## Privacy: dati cifrati, dashboard pubblica
 

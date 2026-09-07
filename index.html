@@ -132,7 +132,7 @@ details.gh summary{cursor:pointer;font-size:13px;color:var(--board);font-weight:
   <h1>Ogni libro usato che cambia banco, <em>vale per il sistema</em>.</h1>
   <div class="controls">
     <label>Tariffa per copia: € <input type="number" id="rate" value="0.4" step="0.01" min="0"> /libro</label>
-    <label>Formazione: € <input type="number" id="oraria" value="15" step="0.5" min="0"> /h</label>
+    <label>Assistenza: € <input type="number" id="oraria" value="15" step="0.5" min="0"> /h</label>
     <label>Crescita: <input type="number" id="crescita" value="15" step="1" min="0"> %/mese</label>
     <button class="btn" id="btnSaveGh">💾 Salva su GitHub</button>
     <button class="btn ghost" id="btnDownload">⬇ Scarica CSV</button>
@@ -196,9 +196,10 @@ details.gh summary{cursor:pointer;font-size:13px;color:var(--board);font-weight:
   </section>
 
   <section>
-    <div class="sec-title">Formazione</div>
-    <p class="sec-sub">Modifica le <strong>ore</strong>: il ricavo formazione si ricalcola. La spunta «Conta nel totale» include o esclude la scuola.</p>
-    <div class="training-grid" id="trainingGrid"></div>
+    <div class="sec-title">Assistenza</div>
+    <p class="sec-sub">Lista di chi fa assistenza. Per ogni persona indica le <strong>ore</strong>: il ricavo si ricalcola (ore × tariffa oraria). La spunta «Conta nel totale» la include o esclude dal riepilogo finale.</p>
+    <div class="training-grid" id="assistGrid"></div>
+    <div class="row-actions"><button class="btn sm line" id="btnAddAssist">+ Aggiungi persona</button></div>
   </section>
 
   <section>
@@ -212,7 +213,7 @@ details.gh summary{cursor:pointer;font-size:13px;color:var(--board);font-weight:
     <div class="sec-title">Riepilogo economico</div>
     <div class="summary">
       <div class="sline pos"><span class="l">Incasso vendite libri (scuole attive)</span><span class="v" id="sVendite"></span></div>
-      <div class="sline pos"><span class="l">Ricavo formazione (scuole incluse)</span><span class="v" id="sForm"></span></div>
+      <div class="sline pos"><span class="l">Ricavo assistenza (persone incluse)</span><span class="v" id="sForm"></span></div>
       <div id="sSpese"></div>
       <div class="sline total"><span class="l">Netto sistema</span><span class="v" id="sTotale"></span></div>
     </div>
@@ -229,6 +230,7 @@ details.gh summary{cursor:pointer;font-size:13px;color:var(--board);font-weight:
 
 /* ---------- stato ---------- */
 let schools = [];
+let assistenti = [];   // {nome, ore, conta}
 let spese   = [];
 let cfg = { tariffa_per_copia:0.4, tariffa_oraria_formazione:15, anno_scolastico:'—', crescita_mensile_pct:15 };
 
@@ -311,7 +313,7 @@ const numOr0 = v => { const n = parseFloat(String(v).replace(',','.')); return i
 
 function loadFromCsvText(text){
   const rows = parseCsv(text);
-  const S=[], E=[]; const C={...cfg};
+  const S=[], A=[], E=[]; const C={...cfg};
   rows.forEach(r=>{
     const t=(r.tipo||'').toLowerCase();
     if(t==='config'){
@@ -321,11 +323,13 @@ function loadFromCsvText(text){
     } else if(t==='scuola'){
       S.push({name:r.nome, gestiti:numOr0(r.gestiti), venduti:numOr0(r.venduti), ricavo:numOr0(r.ricavo),
               netto:numOr0(r.netto), exempt:truthy(r.esente), ore:numOr0(r.ore), conta:truthy(r.conta)});
+    } else if(t==='assistente'){
+      A.push({nome:r.nome, ore:numOr0(r.ore), conta:truthy(r.conta)});
     } else if(t==='spesa'){
       E.push({voce:r.nome, costo:numOr0(r.valore)});
     }
   });
-  schools=S; spese=E; cfg=C;
+  schools=S; assistenti=A; spese=E; cfg=C;
 }
 
 function buildCsv(){
@@ -337,6 +341,9 @@ function buildCsv(){
   out += `config,crescita_mensile_pct,,,,,,,,${parseFloat(document.getElementById('crescita').value)||0}\n`;
   schools.forEach(s=>{
     out += `scuola,${csvCell(s.name)},${g(s.gestiti)},${g(s.venduti)},${g(s.ricavo)},${g(s.netto)},${s.exempt?'si':'no'},${g(s.ore)},${s.conta?'si':'no'},\n`;
+  });
+  assistenti.forEach(p=>{
+    out += `assistente,${csvCell(p.nome)},,,,,,${g(p.ore)},${p.conta?'si':'no'},\n`;
   });
   spese.forEach(x=>{ out += `spesa,${csvCell(x.voce)},,,,,,,,${g(x.costo)}\n`; });
   return out;
@@ -364,16 +371,17 @@ function buildTable(){
     tb.appendChild(tr);
   });
 }
-function buildTraining(){
-  const g = document.getElementById('trainingGrid'); g.innerHTML='';
-  schools.forEach((s,i)=>{
+function buildAssist(){
+  const g = document.getElementById('assistGrid'); g.innerHTML='';
+  assistenti.forEach((p,i)=>{
     const c = document.createElement('div');
-    c.className='tcard'; c.id='tcard'+i;
-    c.innerHTML = `<div class="thead"><span class="school">${s.name}</span>
-      <label class="switch"><input type="checkbox" data-chk="${i}" ${s.conta?'checked':''}> Conta nel totale</label></div>
-      <div class="trow"><label>Ore fatte</label><input type="number" min="0" step="0.5" data-ore="${i}" value="${s.ore}"></div>
-      <div class="trow"><label>Costo orario</label><b id="oref${i}"></b></div>
-      <div class="tval"><span class="l">Ricavo formazione</span><span class="v" id="fval${i}">—</span></div>`;
+    c.className='tcard'; c.id='acard'+i;
+    c.innerHTML = `<div class="thead"><input type="text" class="school" data-aname="${i}" value="${(p.nome||'').replace(/"/g,'&quot;')}" placeholder="Nome persona" style="border:1px solid var(--paper-line);border-radius:6px;padding:4px 8px;width:150px">
+      <label class="switch"><input type="checkbox" data-achk="${i}" ${p.conta?'checked':''}> Conta nel totale</label></div>
+      <div class="trow"><label>Ore assistenza</label><input type="number" min="0" step="0.5" data-aore="${i}" value="${p.ore}"></div>
+      <div class="trow"><label>Tariffa oraria</label><b id="aref${i}"></b></div>
+      <div class="tval"><span class="l">Ricavo assistenza</span><span class="v" id="aval${i}">—</span></div>
+      <div class="row-actions"><button class="btn sm del" data-delassist="${i}">Rimuovi</button></div>`;
     g.appendChild(c);
   });
 }
@@ -388,7 +396,7 @@ function buildExpenses(){
     g.appendChild(c);
   });
 }
-function buildAll(){ applyConfigToInputs(); buildTable(); buildTraining(); buildExpenses(); }
+function buildAll(){ applyConfigToInputs(); buildTable(); buildAssist(); buildExpenses(); }
 
 /* ---------- calcolo ---------- */
 let chartBooks, chartShare, chartGrowth;
@@ -401,8 +409,11 @@ function readInputs(){
     s.ricavo  = +q(`[data-f="ricavo"][data-i="${i}"]`).value  || 0;
     s.netto   = +q(`[data-f="netto"][data-i="${i}"]`).value   || 0;
     s.exempt  = q(`[data-ex="${i}"]`).checked;
-    s.ore     = +q(`[data-ore="${i}"]`).value || 0;
-    s.conta   = q(`[data-chk="${i}"]`).checked;
+  });
+  assistenti.forEach((p,i)=>{
+    p.nome  = document.querySelector(`[data-aname="${i}"]`)?.value ?? p.nome;
+    p.ore   = +document.querySelector(`[data-aore="${i}"]`).value || 0;
+    p.conta = document.querySelector(`[data-achk="${i}"]`).checked;
   });
   spese.forEach((x,i)=>{
     x.voce  = document.querySelector(`[data-expname="${i}"]`)?.value ?? x.voce;
@@ -425,12 +436,12 @@ function recalc(){
   hLibri.textContent=fmtNum(allG); hVenduti.textContent=fmtNum(allV);
   hRicavo.textContent=fmtEUR(allR); hIncasso.textContent=fmtEUR(tI);
   let formTot=0;
-  schools.forEach((s,i)=>{
-    const val = s.ore * oraria();
-    document.getElementById('fval'+i).textContent = fmtEUR(val);
-    document.getElementById('oref'+i).textContent = fmtEUR(oraria())+' /h';
-    document.getElementById('tcard'+i).classList.toggle('off', !s.conta);
-    if(s.conta) formTot += val;
+  assistenti.forEach((p,i)=>{
+    const val = p.ore * oraria();
+    document.getElementById('aval'+i).textContent = fmtEUR(val);
+    document.getElementById('aref'+i).textContent = fmtEUR(oraria())+' /h';
+    document.getElementById('acard'+i).classList.toggle('off', !p.conta);
+    if(p.conta) formTot += val;
   });
   let speseTot=0, speseHtml='';
   spese.forEach(x=>{
@@ -482,7 +493,15 @@ function rebuildCharts(){ if(chartBooks){chartBooks.destroy();chartShare.destroy
 function addSchool(){
   readInputs();
   schools.push({name:'Nuova scuola',gestiti:0,venduti:0,ricavo:0,netto:0,exempt:false,ore:0,conta:true});
-  buildTable(); buildTraining(); rebuildCharts(); recalc();
+  buildTable(); rebuildCharts(); recalc();
+}
+function addAssist(){
+  readInputs();
+  assistenti.push({nome:'Nuova persona',ore:0,conta:true});
+  buildAssist(); recalc();
+}
+function delAssist(i){
+  readInputs(); assistenti.splice(i,1); buildAssist(); recalc();
 }
 function addExpense(){
   readInputs();
@@ -667,7 +686,11 @@ async function boot(){
   document.getElementById('btnSaveGh2').addEventListener('click', saveToGitHub);
   document.getElementById('btnLoadGh').addEventListener('click', loadFromGitHub);
   document.getElementById('btnAddSchool').addEventListener('click', addSchool);
+  document.getElementById('btnAddAssist').addEventListener('click', addAssist);
   document.getElementById('btnAddExpense').addEventListener('click', addExpense);
+  document.getElementById('assistGrid').addEventListener('click', e=>{
+    const d=e.target.closest('[data-delassist]'); if(d) delAssist(+d.dataset.delassist);
+  });
   document.getElementById('expGrid').addEventListener('click', e=>{
     const d=e.target.closest('[data-delexp]'); if(d) delExpense(+d.dataset.delexp);
   });
