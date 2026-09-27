@@ -1,83 +1,52 @@
-# Registro Incassi — Dashboard
+# Registro Incassi — Dashboard locale
 
-Dashboard per tracciare incassi della piattaforma libri usati. **Nessun server, nessun database esterno**: tutto il DB sta in un unico file CSV versionato nel repo, `data/registro.csv`. Si modifica dalla pagina e si salva con un bottone — via GitHub o come download.
+Dashboard per tracciare incassi della piattaforma libri usati. Gira **solo in locale**, nessun server esterno. Il database è un unico file: `data/registro.csv`.
 
 ## Struttura
 
 ```
 registro-incassi/
-├── index.html                dashboard (apri nel browser)
-├── data/registro.csv.enc     il database CIFRATO (config, scuole, spese)
+├── index.html                dashboard editabile (aprila con avvia.command)
+├── avvia.command             doppio-click: avvia server locale + browser
+├── data/registro.csv         database (config, scuole, assistenza, spese)
 ├── tools/
-│   ├── cifra.py              cifra/decifra il CSV (una tantum, da terminale)
-│   └── registro.py          report a schermo (chiede la password)
+│   ├── cifra.py             (opzionale) cifra/decifra il CSV
+│   └── registro.py          report a schermo da terminale
 └── README.md
 ```
 
-> `data/registro.csv` in chiaro esiste solo in locale ed è in `.gitignore`: nel repo va **solo** il `.enc`.
+## Come si apre
 
-## Il file `data/registro.csv`
+**Doppio-click su `avvia.command`.** Parte un server locale e si apre il browser. Tieni aperta la finestra del terminale mentre lavori.
 
-La colonna `tipo` dice cos'è ogni riga:
-
-- `config` → tariffa per copia, tariffa oraria assistenza, anno, crescita %/mese
-- `scuola` → gestiti, venduti, ricavo, netto, esente (si/no)
-- `assistente` → una persona che fa assistenza: `nome`, `ore`, `conta` (si/no = incluso nel totale)
-- `spesa`  → nome nella colonna `nome`, importo nella colonna `valore`
+> Serve il server perché il browser, aprendo il file come `file://`, non può leggere `data/registro.csv`. `avvia.command` risolve.
 
 ## Come si usa
 
-1. Apri `index.html` (in locale, o via GitHub Pages se attivato).
-2. Modifica libri gestiti/venduti/ricavo/netto, tariffe, persone assistenza (ore), spese. Incasso, assistenza, totali e grafici si ricalcolano da soli.
-3. Salva:
-   - **💾 Salva su GitHub** — fa il commit di `data/registro.csv` direttamente nel repo (serve un token, vedi sotto).
-   - **⬇ Scarica CSV** — backup locale, poi lo sovrascrivi/committi a mano.
+1. Modifica scuole, **assistenza** (persone + ore), spese, tariffe. Incassi, totali e grafici si ricalcolano da soli.
+2. **💾 Salva CSV** → scarica `registro.csv` aggiornato. Sostituiscilo in `data/` per salvare.
+3. **🔗 Esporta homepage** → crea `homepage.html`, un file singolo autonomo (dati inclusi) da **condividere con gli amici**. Loro possono guardare e modificare nel loro browser, ma nulla si salva.
 
-### Calcoli
+### Sezioni
 
-- Incasso sistema per scuola = libri venduti × tariffa per copia
-- Scuole `esente = si` NON entrano nell'incasso del sistema
-- Ricavo assistenza = ore × tariffa oraria (solo persone `assistente` con `conta = si`)
-- Netto sistema = incasso vendite + assistenza − spese
+- **Registro per scuola**: incasso sistema = libri venduti × tariffa. `esente` esclude la scuola.
+- **Assistenza**: una voce per ogni scuola; dentro ogni scuola aggiungi le persone con le loro ore. Ricavo = ore × tariffa oraria, con subtotale per scuola. La spunta include/esclude la persona dal totale.
+- **Spese**: costi fissi, sottratti dal totale.
+- **Netto sistema** = incasso vendite + assistenza (persone incluse) − spese.
 
-## Privacy: dati cifrati, dashboard pubblica
+## Cifratura (opzionale)
 
-Il repo può essere **pubblico** (hosting GitHub Pages gratis) mantenendo i **dati privati**:
-
-- Nel repo c'è solo `data/registro.csv.enc` — il CSV **cifrato AES-256-GCM**.
-- La chiave si deriva da una **password** (PBKDF2-SHA256, 310k iterazioni) che **digiti ogni volta** e **non è salvata da nessuna parte** (né nel codice, né nel repo, né in localStorage).
-- Aprendo la dashboard, un gate chiede la password e decifra **nel browser**. Il file `.enc` pubblico è illeggibile senza password.
-- `data/registro.csv` (in chiaro) è in `.gitignore`: non va mai committato.
-
-> La sicurezza dipende dalla **forza della password**: usa una passphrase lunga (4-5 parole). Chi scarica il `.enc` può tentare un attacco offline. Se perdi la password, i dati non si recuperano.
-
-### Prima cifratura (una volta)
+Di default i dati sono in chiaro in `data/registro.csv`. Se vuoi ri-cifrarli:
 
 ```bash
-python3 tools/cifra.py            # crea data/registro.csv.enc dalla password scelta
-# poi elimina il chiaro:
-rm data/registro.csv
+python3 tools/cifra.py            # data/registro.csv  ->  data/registro.csv.enc
+python3 tools/cifra.py --decifra  # data/registro.csv.enc  ->  data/registro.csv
 ```
 
-Richiede `pip3 install cryptography`. Per rileggere in chiaro: `python3 tools/cifra.py --decifra`.
+Richiede `pip3 install cryptography`.
 
-## Salvataggio su GitHub (DB dentro GitHub, senza altri sistemi)
-
-Il bottone «Salva su GitHub» usa la **GitHub Contents API** per committare il CSV nel repo. Serve un token personale:
-
-1. GitHub → **Settings → Developer settings → Fine-grained tokens → Generate new token**.
-2. Ambito: solo il repo `registro-incassi`. Permesso: **Contents → Read and write**.
-3. Copia il token e incollalo nel pannello «Configurazione repository e token» della dashboard.
-
-Il token è salvato **solo nel `localStorage` del tuo browser** e viene inviato esclusivamente a `api.github.com`. Non è mai committato nel repo.
-
-## Hosting con GitHub Pages (opzionale)
-
-Repo → **Settings → Pages** → Source: *Deploy from a branch* → `main` / `(root)` → Save.
-> Nota: su piano gratuito Pages funziona solo con repo **pubbliche**. Per una repo **privata** serve GitHub Pro/Team.
-
-## Uso da terminale (opzionale)
+## Report da terminale (opzionale)
 
 ```bash
-python3 tools/registro.py report   # riepilogo a schermo (chiede la password)
+python3 tools/registro.py report   # riepilogo a schermo
 ```

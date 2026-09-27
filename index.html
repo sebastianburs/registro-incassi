@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="it"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, max-age=0">
 <title>Registro Incassi — Piattaforma Libri Usati</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,900&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -55,6 +56,7 @@ tfoot td:first-child{text-align:left;font-family:'Inter',sans-serif;padding-left
 .chart-box{position:relative;height:280px}
 .chart-card.full{grid-column:1 / -1}.chart-card.full .chart-box{height:320px}
 .training-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+#assistGrid{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
 .tcard{background:#fff;border:1px solid var(--paper-line);border-radius:10px;padding:18px;box-shadow:0 2px 10px rgba(20,35,28,.05);transition:opacity .2s}
 .tcard.off{opacity:.5;border-style:dashed}
 .tcard .thead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
@@ -68,6 +70,23 @@ tfoot td:first-child{text-align:left;font-family:'Inter',sans-serif;padding-left
 .tval .l{font-size:12px;color:var(--muted)}
 .tval .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px;color:var(--ok)}
 .tcard.off .tval .v{color:#9AA39D;text-decoration:line-through}
+.arow{border-bottom:1px dashed var(--paper-line);padding-bottom:8px;margin-bottom:8px}
+.arow .aname{width:100%;border:1px solid var(--paper-line);border-radius:6px;padding:6px 8px;font-size:13px;background:var(--paper);margin-bottom:6px}
+.arow .actrl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.arow .aore{width:44px;border:none;border-bottom:1.5px solid var(--paper-line);border-radius:0;padding:2px 2px 3px;background:transparent;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--board);text-align:center;transition:border-color .18s,color .18s,transform .18s}
+.arow .aore:hover{border-bottom-color:var(--amber)}
+.arow .aore:focus{outline:none;border-bottom:2px solid var(--amber);color:var(--ink);transform:scale(1.08)}
+.arow .aore::-webkit-outer-spin-button,.arow .aore::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.arow .aore{-moz-appearance:textfield}
+.arow .actrl .u{font-size:11px;color:var(--muted);margin-left:1px}
+.arow .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--ok);margin-left:auto;text-align:right;white-space:nowrap}
+.arow .chk{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.arow .chk input{width:15px;height:15px;accent-color:var(--ok)}
+.arow.off{opacity:.55}.arow.off .v{color:#9AA39D;text-decoration:line-through}
+.arow .btn.del{padding:3px 8px}
+.tcard .thead{gap:8px}
+.tcard .school{overflow-wrap:anywhere}
+.tcard .asub{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;color:var(--ok);white-space:nowrap}
 .exp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
 .exp-card{background:#fff;border:1px solid var(--paper-line);border-left:5px solid var(--red);border-radius:10px;padding:18px;box-shadow:0 2px 10px rgba(20,35,28,.05)}
 .exp-card .school{font-family:'Fraunces',serif;font-weight:700;font-size:17px;margin-bottom:12px}
@@ -115,18 +134,6 @@ details.gh summary{cursor:pointer;font-size:13px;color:var(--board);font-weight:
 .gate-msg.err{color:var(--red)}.gate-msg.busy{color:var(--muted)}
 .gate-hint{font-size:11px;color:var(--muted);margin-top:16px;line-height:1.6}
 </style></head><body>
-<div id="gate" class="hidden"><div class="gate-card">
-  <div class="eyebrow">Registro incassi · accesso</div>
-  <h2 id="gateTitle">Inserisci la password</h2>
-  <p id="gateDesc">I dati sono cifrati. Digita la password per aprirli. Non viene salvata da nessuna parte.</p>
-  <form id="gateForm">
-    <input type="password" id="gatePass" placeholder="Password" autocomplete="current-password" autofocus>
-    <input type="password" id="gatePass2" placeholder="Ripeti password" autocomplete="new-password" style="display:none">
-    <button class="btn" type="submit" id="gateBtn">🔓 Sblocca</button>
-  </form>
-  <div class="gate-msg" id="gateMsg"></div>
-  <div class="gate-hint" id="gateHint"></div>
-</div></div>
 <header><div class="wrap">
   <div class="eyebrow">Registro incassi · Anno scolastico <span id="ebAnno">—</span></div>
   <h1>Ogni libro usato che cambia banco, <em>vale per il sistema</em>.</h1>
@@ -134,8 +141,8 @@ details.gh summary{cursor:pointer;font-size:13px;color:var(--board);font-weight:
     <label>Tariffa per copia: € <input type="number" id="rate" value="0.4" step="0.01" min="0"> /libro</label>
     <label>Assistenza: € <input type="number" id="oraria" value="15" step="0.5" min="0"> /h</label>
     <label>Crescita: <input type="number" id="crescita" value="15" step="1" min="0"> %/mese</label>
-    <button class="btn" id="btnSaveGh">💾 Salva su GitHub</button>
-    <button class="btn ghost" id="btnDownload">⬇ Scarica CSV</button>
+    <button class="btn" id="btnSaveEnc">💾 Salva CSV</button>
+    <button class="btn ghost" id="btnExport">🖥 Genera dashboard diretta</button>
     <span id="saveMsg"></span>
   </div>
   <div class="hero-stats">
@@ -144,35 +151,9 @@ details.gh summary{cursor:pointer;font-size:13px;color:var(--board);font-weight:
     <div class="hstat"><div class="n" id="hRicavo">—</div><div class="l">Ricavo scuole</div></div>
     <div class="hstat gold"><div class="n" id="hIncasso">—</div><div class="l">Incasso sistema (attivo)</div></div>
   </div>
-  <p class="note">Database <strong>cifrato</strong> in data/registro.csv.enc <span id="srcBadge" class="badge local">locale</span>. Modifica i campi: tutto si ricalcola. «Salva su GitHub» ri-cifra e committa; «Scarica CSV» = backup in chiaro (solo sul tuo disco).</p>
+  <p class="note">Database in data/registro.csv <span id="srcBadge" class="badge local">locale</span>. Modifica i campi: tutto si ricalcola. «Salva CSV» scarica il file aggiornato da mettere in <code>data/</code>; «Genera dashboard diretta» crea un file singolo <code>homepage.html</code> che si apre con doppio-click (niente server, niente password) da condividere con gli amici.</p>
 </div></header>
 <div class="wrap">
-
-  <section>
-    <div class="sec-title">Sorgente dati · GitHub</div>
-    <p class="sec-sub">Il CSV vive nel tuo repo GitHub. Incolla un token una volta (resta solo nel tuo browser) e salvi con un bottone — nessun altro sistema.</p>
-    <div class="gh-panel">
-      <details class="gh"><summary>⚙ Configurazione repository e token</summary>
-        <div class="gh-grid">
-          <div class="gh-field"><label>Owner (utente/org)</label><input id="ghOwner" placeholder="sebastianburs"></div>
-          <div class="gh-field"><label>Repository</label><input id="ghRepo" placeholder="registro-incassi"></div>
-          <div class="gh-field"><label>Branch</label><input id="ghBranch" placeholder="main"></div>
-          <div class="gh-field"><label>Percorso file</label><input id="ghPath" placeholder="data/registro.csv.enc"></div>
-          <div class="gh-field" style="grid-column:1/-1"><label>Personal Access Token (scope: repo/contents)</label><input id="ghToken" type="password" placeholder="ghp_… oppure github_pat_…"></div>
-        </div>
-      </details>
-      <div class="gh-actions">
-        <button class="btn line" id="btnLoadGh">⟳ Carica da GitHub</button>
-        <button class="btn" id="btnSaveGh2">💾 Salva su GitHub</button>
-        <span id="ghMsg"></span>
-      </div>
-      <p class="gh-help">
-        <strong>Token:</strong> GitHub → Settings → Developer settings → <em>Fine-grained tokens</em> → repo <code>registro-incassi</code>, permesso <code>Contents: Read and write</code>.
-        Salvato solo in <code>localStorage</code> del browser, inviato solo a <code>api.github.com</code>.
-        <br><strong>Password dati:</strong> cifra/decifra il CSV in locale (AES-256), non è mai salvata né committata. Il file nel repo (<code>data/registro.csv.enc</code>) è illeggibile senza di essa.
-      </p>
-    </div>
-  </section>
 
   <section>
     <div class="sec-title">Registro per scuola</div>
@@ -197,9 +178,8 @@ details.gh summary{cursor:pointer;font-size:13px;color:var(--board);font-weight:
 
   <section>
     <div class="sec-title">Assistenza</div>
-    <p class="sec-sub">Lista di chi fa assistenza. Per ogni persona indica le <strong>ore</strong>: il ricavo si ricalcola (ore × tariffa oraria). La spunta «Conta nel totale» la include o esclude dal riepilogo finale.</p>
+    <p class="sec-sub">Una voce per ogni scuola. Dentro ogni scuola aggiungi le persone con le loro <strong>ore</strong> (ricavo = ore × tariffa oraria). La spunta include/esclude la persona dal riepilogo finale.</p>
     <div class="training-grid" id="assistGrid"></div>
-    <div class="row-actions"><button class="btn sm line" id="btnAddAssist">+ Aggiungi persona</button></div>
   </section>
 
   <section>
@@ -243,7 +223,7 @@ const oraria   = () => parseFloat(document.getElementById('oraria').value) || 0;
 const crescita = () => (parseFloat(document.getElementById('crescita').value) || 0) / 100;
 
 /* ---------- template vuoto (NIENTE dati reali: questo HTML è pubblico) ----------
-   I dati veri stanno cifrati in data/registro.csv.enc e si aprono con la password. */
+   I dati veri stanno in data/registro.csv. */
 const SEED_CSV = `tipo,nome,gestiti,venduti,ricavo,netto,esente,ore,conta,valore
 config,tariffa_per_copia,,,,,,,,0.40
 config,tariffa_oraria_formazione,,,,,,,,15
@@ -251,37 +231,6 @@ config,anno_scolastico,,,,,,,,2025/26
 config,crescita_mensile_pct,,,,,,,,15
 `;
 
-/* ============================================================
-   Cifratura client-side: AES-256-GCM, chiave da PBKDF2-SHA256.
-   La password NON viene mai salvata: sta solo in memoria (SESSION_PASS)
-   finché la scheda è aperta. Il blob .enc è pubblico ma inutile senza pw.
-   Formato compatibile con tools/registro.py e tools/cifra.py.
-   ============================================================ */
-const PBKDF2_ITER = 310000;
-let SESSION_PASS = null;   // solo in RAM, mai su disco/localStorage
-const _te = new TextEncoder(), _td = new TextDecoder();
-const b64 = u8 => btoa(String.fromCharCode(...new Uint8Array(u8)));
-const u8b64 = s => Uint8Array.from(atob(s), c=>c.charCodeAt(0));
-async function deriveKey(pass, salt, iter){
-  const km = await crypto.subtle.importKey('raw', _te.encode(pass), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:iter, hash:'SHA-256'},
-    km, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
-}
-async function encryptCsv(text, pass){
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv   = crypto.getRandomValues(new Uint8Array(12));
-  const key  = await deriveKey(pass, salt, PBKDF2_ITER);
-  const ct   = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, _te.encode(text));
-  return JSON.stringify({v:1, kdf:'PBKDF2', hash:'SHA-256', iter:PBKDF2_ITER,
-    cipher:'AES-256-GCM', salt:b64(salt), iv:b64(iv), ct:b64(ct)}, null, 0)+'\n';
-}
-async function decryptCsv(blob, pass){
-  const o = JSON.parse(blob);
-  const key = await deriveKey(pass, u8b64(o.salt), o.iter||PBKDF2_ITER);
-  const pt  = await crypto.subtle.decrypt({name:'AES-GCM', iv:u8b64(o.iv)}, key, u8b64(o.ct));
-  return _td.decode(pt);
-}
-const looksEncrypted = t => { try{ const o=JSON.parse(t); return o && o.ct && o.iv && o.salt; }catch(e){ return false; } };
 
 /* ---------- CSV parse/serialize ---------- */
 function parseCsv(text){
@@ -324,7 +273,7 @@ function loadFromCsvText(text){
       S.push({name:r.nome, gestiti:numOr0(r.gestiti), venduti:numOr0(r.venduti), ricavo:numOr0(r.ricavo),
               netto:numOr0(r.netto), exempt:truthy(r.esente), ore:numOr0(r.ore), conta:truthy(r.conta)});
     } else if(t==='assistente'){
-      A.push({nome:r.nome, ore:numOr0(r.ore), conta:truthy(r.conta)});
+      A.push({nome:r.nome, ore:numOr0(r.ore), conta:truthy(r.conta), scuola:(r.valore||'').trim()});
     } else if(t==='spesa'){
       E.push({voce:r.nome, costo:numOr0(r.valore)});
     }
@@ -343,7 +292,7 @@ function buildCsv(){
     out += `scuola,${csvCell(s.name)},${g(s.gestiti)},${g(s.venduti)},${g(s.ricavo)},${g(s.netto)},${s.exempt?'si':'no'},${g(s.ore)},${s.conta?'si':'no'},\n`;
   });
   assistenti.forEach(p=>{
-    out += `assistente,${csvCell(p.nome)},,,,,,${g(p.ore)},${p.conta?'si':'no'},\n`;
+    out += `assistente,${csvCell(p.nome)},,,,,,${g(p.ore)},${p.conta?'si':'no'},${csvCell(p.scuola||'')}\n`;
   });
   spese.forEach(x=>{ out += `spesa,${csvCell(x.voce)},,,,,,,,${g(x.costo)}\n`; });
   return out;
@@ -373,15 +322,26 @@ function buildTable(){
 }
 function buildAssist(){
   const g = document.getElementById('assistGrid'); g.innerHTML='';
-  assistenti.forEach((p,i)=>{
-    const c = document.createElement('div');
-    c.className='tcard'; c.id='acard'+i;
-    c.innerHTML = `<div class="thead"><input type="text" class="school" data-aname="${i}" value="${(p.nome||'').replace(/"/g,'&quot;')}" placeholder="Nome persona" style="border:1px solid var(--paper-line);border-radius:6px;padding:4px 8px;width:150px">
-      <label class="switch"><input type="checkbox" data-achk="${i}" ${p.conta?'checked':''}> Conta nel totale</label></div>
-      <div class="trow"><label>Ore assistenza</label><input type="number" min="0" step="0.5" data-aore="${i}" value="${p.ore}"></div>
-      <div class="trow"><label>Tariffa oraria</label><b id="aref${i}"></b></div>
-      <div class="tval"><span class="l">Ricavo assistenza</span><span class="v" id="aval${i}">—</span></div>
-      <div class="row-actions"><button class="btn sm del" data-delassist="${i}">Rimuovi</button></div>`;
+  const names = schools.map(s=>s.name);
+  const groups = names.map(n=>({label:n, key:n}));
+  if(assistenti.some(p=>!names.includes(p.scuola))) groups.push({label:'Altro (senza scuola)', key:''});
+  groups.forEach(gr=>{
+    const c = document.createElement('div'); c.className='tcard';
+    const persone = assistenti.map((p,i)=>({p,i}))
+      .filter(x=> gr.key ? x.p.scuola===gr.key : !names.includes(x.p.scuola));
+    const rows = persone.map(({p,i})=>`
+      <div class="arow" data-arow="${i}">
+        <input class="aname" type="text" data-aname="${i}" value="${(p.nome||'').replace(/"/g,'&quot;')}" placeholder="Nome">
+        <div class="actrl">
+          <input class="aore" type="number" min="0" step="0.5" data-aore="${i}" value="${p.ore}" title="ore"><span class="u">h</span>
+          <span class="v" id="aval${i}">—</span>
+          <label class="chk" title="Se tolta, non entra nel totale"><input type="checkbox" data-achk="${i}" ${p.conta?'checked':''}> conta</label>
+          <button class="btn sm del" data-delassist="${i}" title="Rimuovi">✕</button>
+        </div>
+      </div>`).join('');
+    c.innerHTML = `<div class="thead"><span class="school">${gr.label}</span><span class="asub" data-subgroup="${gr.key}">—</span></div>
+      ${rows || '<p class="sec-sub" style="margin:0 0 10px 0">Nessuna persona.</p>'}
+      <div class="row-actions"><button class="btn sm line" data-addassist="${gr.key}">+ persona</button></div>`;
     g.appendChild(c);
   });
 }
@@ -438,10 +398,16 @@ function recalc(){
   let formTot=0;
   assistenti.forEach((p,i)=>{
     const val = p.ore * oraria();
-    document.getElementById('aval'+i).textContent = fmtEUR(val);
-    document.getElementById('aref'+i).textContent = fmtEUR(oraria())+' /h';
-    document.getElementById('acard'+i).classList.toggle('off', !p.conta);
+    const el=document.getElementById('aval'+i); if(el) el.textContent = fmtEUR(val);
+    const row=document.querySelector(`[data-arow="${i}"]`); if(row) row.classList.toggle('off', !p.conta);
     if(p.conta) formTot += val;
+  });
+  const names = schools.map(s=>s.name);
+  document.querySelectorAll('[data-subgroup]').forEach(el=>{
+    const key = el.getAttribute('data-subgroup');
+    let st=0;
+    assistenti.forEach(p=>{ const match = key ? p.scuola===key : !names.includes(p.scuola); if(match && p.conta) st += p.ore*oraria(); });
+    el.textContent = fmtEUR(st);
   });
   let speseTot=0, speseHtml='';
   spese.forEach(x=>{
@@ -493,11 +459,11 @@ function rebuildCharts(){ if(chartBooks){chartBooks.destroy();chartShare.destroy
 function addSchool(){
   readInputs();
   schools.push({name:'Nuova scuola',gestiti:0,venduti:0,ricavo:0,netto:0,exempt:false,ore:0,conta:true});
-  buildTable(); rebuildCharts(); recalc();
+  buildTable(); buildAssist(); rebuildCharts(); recalc();
 }
-function addAssist(){
+function addAssistTo(scuola){
   readInputs();
-  assistenti.push({nome:'Nuova persona',ore:0,conta:true});
+  assistenti.push({nome:'Nuova persona',ore:0,conta:true,scuola:scuola||''});
   buildAssist(); recalc();
 }
 function delAssist(i){
@@ -519,182 +485,89 @@ function downloadCsv(){
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(buildCsv());
   a.download='registro.csv'; document.body.appendChild(a); a.click(); a.remove();
   const m=document.getElementById('saveMsg');
-  m.textContent='✓ scaricato — backup locale';
-  setTimeout(()=>m.textContent='',5000);
+  m.textContent='✓ registro.csv scaricato — mettilo in data/ sovrascrivendo';
+  setTimeout(()=>m.textContent='',6000);
 }
 
 /* ============================================================
-   GitHub Contents API — carica e salva il CSV nel repo
+   Salvataggio locale: scarica registro.csv aggiornato.
+   Nessun sistema esterno — sostituisci il file in data/.
    ============================================================ */
-const GH = {
-  owner(){ return document.getElementById('ghOwner').value.trim(); },
-  repo(){  return document.getElementById('ghRepo').value.trim(); },
-  branch(){return document.getElementById('ghBranch').value.trim() || 'main'; },
-  path(){  return document.getElementById('ghPath').value.trim() || 'data/registro.csv'; },
-  token(){ return document.getElementById('ghToken').value.trim(); },
-  apiUrl(){ return `https://api.github.com/repos/${this.owner()}/${this.repo()}/contents/${this.path()}`; }
-};
-const b64encode = str => btoa(unescape(encodeURIComponent(str)));
-const b64decode = b64 => decodeURIComponent(escape(atob(b64.replace(/\n/g,''))));
-function ghMsg(text, cls){ const m=document.getElementById('ghMsg'); m.textContent=text; m.className=cls||''; }
-
-const CFG_KEYS=['ghOwner','ghRepo','ghBranch','ghPath','ghToken'];
-function saveGhConfig(){ const o={}; CFG_KEYS.forEach(k=>o[k]=document.getElementById(k).value); try{localStorage.setItem('registro_gh',JSON.stringify(o));}catch(e){} }
-function loadGhConfig(){
-  let o={};
-  try{ o=JSON.parse(localStorage.getItem('registro_gh')||'{}'); }catch(e){}
-  document.getElementById('ghOwner').value  = o.ghOwner  || 'sebastianburs';
-  document.getElementById('ghRepo').value   = o.ghRepo   || 'registro-incassi';
-  document.getElementById('ghBranch').value = o.ghBranch || 'main';
-  document.getElementById('ghPath').value   = o.ghPath   || 'data/registro.csv.enc';
-  document.getElementById('ghToken').value  = o.ghToken  || '';
+function downloadBlob(name, text, type){
+  const blob=new Blob([text],{type:type||'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
+function saveMsg(t){ const m=document.getElementById('saveMsg'); m.textContent=t; setTimeout(()=>m.textContent='',6000); }
 
-async function ghGetSha(){
-  const r = await fetch(GH.apiUrl()+`?ref=${GH.branch()}`, {
-    headers:{ 'Authorization':'Bearer '+GH.token(), 'Accept':'application/vnd.github+json' }
-  });
-  if(r.status===404) return null;          // file non esiste ancora
-  if(!r.ok) throw new Error('GET '+r.status+' '+(await r.text()).slice(0,120));
-  const j = await r.json();
-  return { sha:j.sha, content:b64decode(j.content) };
-}
-
-async function loadFromGitHub(){
-  if(!GH.owner()||!GH.repo()){ ghMsg('Compila owner e repository.','err'); return; }
-  if(!GH.token()){ ghMsg('Serve un token (Contents: read).','err'); return; }
-  ghMsg('Carico da GitHub…','busy');
-  try{
-    const res = await ghGetSha();
-    if(!res){ ghMsg('File non trovato nel repo. Usa «Salva» per crearlo.','err'); return; }
-    let csv = res.content;
-    if(looksEncrypted(csv)) csv = await unlockWith(csv);   // chiede password se serve
-    loadFromCsvText(csv);
-    buildAll(); rebuildCharts(); recalc();
-    setSourceBadge(true);
-    ghMsg('✓ Caricato da GitHub.','ok');
-  }catch(e){ ghMsg('Errore: '+e.message,'err'); }
-}
-
-async function saveToGitHub(){
-  if(!GH.owner()||!GH.repo()){ ghMsg('Compila owner e repository.','err'); return; }
-  if(!GH.token()){ ghMsg('Serve un token (Contents: read/write).','err'); return; }
-  readInputs(); saveGhConfig();
-  if(!SESSION_PASS){ await askNewPassword(); }   // prima volta: scegli la password
-  ghMsg('Cifro e salvo su GitHub…','busy');
-  try{
-    const encBlob = await encryptCsv(buildCsv(), SESSION_PASS);
-    let sha=null;
-    try{ const cur=await ghGetSha(); sha=cur?cur.sha:null; }catch(e){ /* se manca permesso read, provo comunque a scrivere */ }
-    const body = {
-      message:'Aggiorna registro incassi da dashboard',
-      content:b64encode(encBlob),
-      branch:GH.branch()
-    };
-    if(sha) body.sha=sha;
-    const r = await fetch(GH.apiUrl(), {
-      method:'PUT',
-      headers:{ 'Authorization':'Bearer '+GH.token(), 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
-      body:JSON.stringify(body)
-    });
-    if(!r.ok) throw new Error('PUT '+r.status+' '+(await r.text()).slice(0,160));
-    const j=await r.json();
-    setSourceBadge(true);
-    ghMsg('✓ Salvato su GitHub · commit '+(j.commit?.sha||'').slice(0,7),'ok');
-  }catch(e){ ghMsg('Errore: '+e.message,'err'); }
+/* ---- Esporta pagina singola (homepage.html) da condividere ----
+   File autonomo: dati inclusi in chiaro, niente password/salvataggio.
+   Modificabile localmente dall'amico, ma nulla si salva. */
+function exportHomepage(){
+  readInputs();
+  const csv = buildCsv();
+  const root = document.documentElement.cloneNode(true);
+  // togli i bottoni che non hanno senso nel file condiviso
+  ['btnSaveEnc','btnExport','btnDownload'].forEach(id=>root.querySelector('#'+id)?.remove());
+  // dati inline + flag modalità condivisa, PRIMA dello script principale
+  const embed = root.querySelector('head').insertBefore(document.createElement('script'),
+                                                        root.querySelector('head').firstChild);
+  embed.textContent = 'window.__EMBED_CSV__='+JSON.stringify(csv)+';';
+  const html='<!DOCTYPE html>\n'+root.outerHTML;
+  downloadBlob('homepage.html', html, 'text/html;charset=utf-8');
+  saveMsg('✓ homepage.html creato — doppio-click per aprirlo, o condividilo');
 }
 
 function setSourceBadge(live){
   const b=document.getElementById('srcBadge');
-  if(live){ b.textContent='GitHub'; b.className='badge live'; }
-  else{ b.textContent='locale'; b.className='badge local'; }
+  if(live){ b.textContent='dati'; b.className='badge live'; }
+  else{ b.textContent='vuoto'; b.className='badge local'; }
 }
 
 /* ============================================================
-   Gate password (overlay). La password resta solo in SESSION_PASS.
+   avvio: legge data/registro.csv in chiaro (serve un server locale
+   per il fetch), altrimenti parte dal template vuoto.
    ============================================================ */
-const gate = document.getElementById('gate');
-let _gateSubmit = null;
-function gVal(){ return {p1:document.getElementById('gatePass').value, p2:document.getElementById('gatePass2').value}; }
-function waitSubmit(){ return new Promise(r=>{ _gateSubmit=r; }); }
-function openGate(o){
-  gate.classList.remove('hidden');
-  document.getElementById('gateTitle').textContent=o.title;
-  document.getElementById('gateDesc').textContent=o.desc;
-  document.getElementById('gateHint').textContent=o.hint||'';
-  document.getElementById('gatePass2').style.display=o.confirm?'block':'none';
-  document.getElementById('gateBtn').textContent=o.confirm?'🔐 Imposta e continua':'🔓 Sblocca';
-  document.getElementById('gatePass').value=''; document.getElementById('gatePass2').value='';
-  const m=document.getElementById('gateMsg'); m.textContent=''; m.className='gate-msg';
-  setTimeout(()=>document.getElementById('gatePass').focus(),50);
-}
-function closeGate(){ gate.classList.add('hidden'); document.getElementById('gatePass').value=''; document.getElementById('gatePass2').value=''; }
-function gateErr(t){ const m=document.getElementById('gateMsg'); m.textContent=t; m.className='gate-msg err'; }
-function gateBusy(t){ const m=document.getElementById('gateMsg'); m.textContent=t; m.className='gate-msg busy'; }
-async function unlockWith(blob){
-  openGate({title:'Inserisci la password', desc:'I dati sono cifrati. Digita la password per aprirli. Non viene salvata da nessuna parte.', confirm:false});
-  while(true){
-    await waitSubmit();
-    const {p1}=gVal();
-    if(!p1){ gateErr('Inserisci la password.'); continue; }
-    gateBusy('Decifro…');
-    try{ const csv=await decryptCsv(blob,p1); SESSION_PASS=p1; closeGate(); return csv; }
-    catch(e){ gateErr('Password errata.'); document.getElementById('gatePass').select(); }
-  }
-}
-async function askNewPassword(){
-  openGate({title:'Imposta una password', desc:'Scegli una password robusta: cifrerà i dati. Serve per riaprirli.', confirm:true,
-    hint:'Consiglio: una passphrase di 4-5 parole. Se la perdi, i dati NON si recuperano.'});
-  while(true){
-    await waitSubmit();
-    const {p1,p2}=gVal();
-    if(p1.length<8){ gateErr('Almeno 8 caratteri.'); continue; }
-    if(p1!==p2){ gateErr('Le due password non coincidono.'); continue; }
-    SESSION_PASS=p1; closeGate(); return p1;
-  }
-}
-document.getElementById('gateForm').addEventListener('submit', e=>{ e.preventDefault(); if(_gateSubmit){ const f=_gateSubmit; _gateSubmit=null; f(); } });
+const EMBED = (typeof window!=='undefined' && window.__EMBED_CSV__) ? window.__EMBED_CSV__ : null;
 
-/* ============================================================
-   avvio: legge data/registro.csv.enc (cifrato) e chiede la password;
-   se non c'è, prova il CSV in chiaro (uso locale/migrazione),
-   altrimenti parte dal template vuoto (prima configurazione).
-   ============================================================ */
-async function boot(){
-  loadGhConfig();
-  let text = SEED_CSV, live=false;
-  // 1) file cifrato (caso pubblicato)
-  try{
-    const r = await fetch('data/registro.csv.enc', {cache:'no-store'});
-    if(r.ok){ const blob = await r.text(); text = await unlockWith(blob); live=true; }
-  }catch(e){ /* prosegui */ }
-  // 2) fallback CSV in chiaro (uso locale / prima cifratura)
-  if(!live){
-    try{
-      const r = await fetch('data/registro.csv', {cache:'no-store'});
-      if(r.ok){ const t = await r.text(); if(!looksEncrypted(t)){ text=t; live=true; } }
-    }catch(e){ /* file:// o assente → template */ }
-  }
-  loadFromCsvText(text);
-  buildAll(); buildCharts(); recalc();
-  setSourceBadge(live);
-
-  // eventi
-  document.addEventListener('input', e=>{ if(e.target.closest('.gh-panel')||e.target.closest('#gate')) return; recalc(); });
-  document.getElementById('btnDownload').addEventListener('click', downloadCsv);
-  document.getElementById('btnSaveGh').addEventListener('click', saveToGitHub);
-  document.getElementById('btnSaveGh2').addEventListener('click', saveToGitHub);
-  document.getElementById('btnLoadGh').addEventListener('click', loadFromGitHub);
-  document.getElementById('btnAddSchool').addEventListener('click', addSchool);
-  document.getElementById('btnAddAssist').addEventListener('click', addAssist);
-  document.getElementById('btnAddExpense').addEventListener('click', addExpense);
+function wireEvents(){
+  document.addEventListener('input', e=>{ recalc(); });
+  document.getElementById('btnAddSchool')?.addEventListener('click', addSchool);
+  document.getElementById('btnAddExpense')?.addEventListener('click', addExpense);
   document.getElementById('assistGrid').addEventListener('click', e=>{
-    const d=e.target.closest('[data-delassist]'); if(d) delAssist(+d.dataset.delassist);
+    const del=e.target.closest('[data-delassist]'); if(del){ delAssist(+del.dataset.delassist); return; }
+    const add=e.target.closest('[data-addassist]'); if(add){ addAssistTo(add.getAttribute('data-addassist')); return; }
   });
   document.getElementById('expGrid').addEventListener('click', e=>{
     const d=e.target.closest('[data-delexp]'); if(d) delExpense(+d.dataset.delexp);
   });
-  CFG_KEYS.forEach(k=>document.getElementById(k).addEventListener('change', saveGhConfig));
+  // bottoni locali (assenti nel file condiviso)
+  document.getElementById('btnSaveEnc')?.addEventListener('click', downloadCsv);
+  document.getElementById('btnExport')?.addEventListener('click', exportHomepage);
+}
+
+async function boot(){
+  // modalità condivisa: dati inclusi in chiaro, niente fetch/password
+  if(EMBED){
+    loadFromCsvText(EMBED);
+    buildAll(); buildCharts(); recalc();
+    document.getElementById('srcBadge').textContent='condiviso';
+    document.getElementById('srcBadge').className='badge live';
+    wireEvents();
+    return;
+  }
+  // uso locale: legge data/registro.csv in chiaro (serve un server locale per il fetch)
+  let text = SEED_CSV, live=false;
+  try{
+    const r = await fetch('data/registro.csv', {cache:'no-store'});
+    if(r.ok){ text = await r.text(); live=true; }
+  }catch(e){ /* file:// o assente → template vuoto */ }
+  loadFromCsvText(text);
+  buildAll(); buildCharts(); recalc();
+  setSourceBadge(live);
+  wireEvents();
 }
 boot();
 </script>

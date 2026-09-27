@@ -1,0 +1,30 @@
+tipo,nome,gestiti,venduti,ricavo,netto,esente,ore,conta,valore
+config,tariffa_per_copia,,,,,,,,0.4
+config,tariffa_oraria_formazione,,,,,,,,15
+config,anno_scolastico,,,,,,,,2025/26
+config,crescita_mensile_pct,,,,,,,,15
+scuola,Rossi,1715,1105,16364,2427,si,0,si,
+scuola,Boscardin,637,365,5775,759,si,0,si,
+scuola,Fogazzaro,583,289,4463,664,no,0,si,
+scuola,Lioy,762,444,6851,938.2,no,0,si,
+scuola,Canova,337,201,3153,434,no,0,si,
+scuola,Fusinieri,217,87,1403,206,no,0,si,
+assistente,Nuova persona,,,,,,0,si,Rossi
+assistente,Basso,,,,,,6.5,si,Boscardin
+assistente,Dilini,,,,,,6,si,Boscardin
+assistente,Sebastian,,,,,,2,si,Boscardin
+assistente,Sebastian,,,,,,12,si,Fogazzaro
+assistente,Sebastian 2,,,,,,2,si,Fogazzaro
+assistente,Nicolo,,,,,,15.5,si,Lioy
+assistente,Sebastian 2,,,,,,4,si,Lioy
+assistente,Sebastian,,,,,,14,si,Canova
+assistente,Borto,,,,,,7,si,Canova
+assistente,Basso,,,,,,7,si,Fusinieri
+assistente,Dilini 2°,,,,,,7,si,Boscardin
+assistente,Dilini,,,,,,4,si,Fogazzaro
+assistente,Nicolo 2,,,,,,4,si,Lioy
+assistente,Sebastian 2,,,,,,7,si,Canova
+spesa,Spesa dominio,,,,,,,,21
+spesa,Spesa host (pre lancio),,,,,,,,60.78
+spesa,Spesa host ora,,,,,,,,95.04
+spesa,Spesa mail,,,,,,,,34.5
